@@ -94,23 +94,44 @@
       </div>
     </nav>
 
-    <div class="container my-5">
-      <h1>Welcome to Best Cars dealership.</h1>
-      <p class="lead">
-        Home to the best cars in North America. We sell domestic and imported
-        cars at reasonable prices.
-      </p>
-
-      <p>
-        Welcome to ABC Motors, your trusted car dealership in the city. We have
-        been serving our customers with quality vehicles and excellent service
-        since 1999. Whether you are looking for a new or used car, SUV, truck,
-        or van, we have something for everyone. Our friendly and knowledgeable
-        staff will help you find the perfect vehicle that suits your needs and
-        budget. We also offer financing options, trade-ins, warranties, and
-        maintenance services. Come and visit us today and see why we are the
-        best car dealership in town.
-      </p>
-    </div>
+    <!--Login Form -->
+    <form action="{% url 'djangoapp:login' %}" method="post">
+      {% csrf_token %}
+      <div class="container">
+        <!--Style root div with .container class -->
+        <h1>Login</h1>
+        <div class="form-group">
+          <!--Style second div with .form-group class -->
+          <label for="username"><b>User Name</b></label>
+          <input
+            id="username"
+            class="form-control"
+            type="text"
+            placeholder="Enter User Name: "
+            name="username"
+            required
+          />
+          <!--Style input with .form-control class -->
+          <label for="psw"><b>Password</b></label>
+          <input
+            id="psw"
+            class="form-control"
+            type="password"
+            placeholder="Enter Password: "
+            name="psw"
+            required
+          />
+          <!--Style input with .form-control class -->
+        </div>
+        {% if message %}
+        <div class="alert alert-warning">
+          <!--Style the message paragraph with .alert and .alert-warning class -->
+          {{ message }}
+        </div>
+        {% endif %}
+        <button class="btn btn-primary" type="submit">Login</button>
+        <!--Style button with .btn and .btn-primary class -->
+      </div>
+    </form>
   </body>
 </html>
