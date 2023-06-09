@@ -10,6 +10,8 @@ from datetime import datetime
 import logging
 import json
 
+from .restapis import get_dealer_reviews_from_cf, get_dealers_from_cf, post_request
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -80,16 +82,43 @@ def registration_request(request):
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
 def get_dealerships(request):
-    context = {}
     if request.method == "GET":
-        return render(request, 'djangoapp/index.html', context)
+        url = "https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/get-dealership"
+        # Get dealers from the URL
+        dealerships = get_dealers_from_cf(url)
+        # Concat all dealer's short name
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # Return a list of dealer short name
+        return HttpResponse(dealer_names)
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
+def get_dealer_details(request, dealer_id):
+    if request.method == "GET":
+        url = "https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review"
+        # Get dealers from the URL
+        reviews = get_dealer_reviews_from_cf(url, dealerId=dealer_id)
+        # Concat all dealer's short name
+        reviews_review = ' '.join([review.sentiment for review in reviews])
+        # Return a list of dealer short name
+        return HttpResponse(reviews_review)
 
 # Create a `add_review` view to submit a review
-# def add_review(request, dealer_id):
+def add_review(request, dealer_id):
 # ...
+    if request.user.is_authenticated:
+        review = {}
+        review["time"] = datetime.utcnow().isoformat()
+        review["dealership"] = dealer_id
+        review["review"] = "This is a great car dealer"
+        review["name"] = "Name"
+        review["purchase"] = True
+
+        json_payload = {}
+        json_payload["review"] = review
+
+        return post_request('https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review'
+                , json_payload=json_payload, dealerId=dealer_id)
+        
+
 
