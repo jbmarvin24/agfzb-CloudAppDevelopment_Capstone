@@ -10,6 +10,14 @@ from django.utils.timezone import now
 # - Any other fields you would like to include in car make model
 # - __str__ method to print a car make object
 
+class CarMake(models.Model):
+    name = models.CharField(null=False, max_length=100)
+    description: models.TextField()
+
+    def __str__(self):
+        return self.name
+
+
 
 # <HINT> Create a Car Model model `class CarModel(models.Model):`:
 # - Many-To-One relationship to Car Make model (One Car Make has many Car Models, using ForeignKey field)
@@ -20,8 +28,53 @@ from django.utils.timezone import now
 # - Any other fields you would like to include in car model
 # - __str__ method to print a car make object
 
+class CarModel(models.Model):
+    make = models.ForeignKey(CarMake, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    dealer_id = models.IntegerField()
+    SEDAN = 'Sedan'
+    SUV = 'SUV'
+    WAGON = 'Wagon'
+    CAR_TYPE_CHOICES = [
+        (SEDAN, 'Sedan'),
+        (SUV, 'SUV'),
+        (WAGON, 'Wagon'),
+    ]
+    car_type = models.CharField(
+        max_length=10,
+        choices=CAR_TYPE_CHOICES,
+        default=SEDAN,
+    )
+    year = models.DateField()
+
+    def __str__(self):
+        return self.name
+
 
 # <HINT> Create a plain Python class `CarDealer` to hold dealer data
+class CarDealer:
+    def __init__(self, id, city, state, st, address, zip, lat, long, short_name, full_name):
+        self.id = id
+        self.city = city
+        self.state = state
+        self.st = st
+        self.address = address
+        self.zip = zip
+        self.lat = lat
+        self.long = long
+        self.short_name = short_name
+        self.full_name = full_name
 
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data
+class DealerReview:
+    def __init__(self, id, name, dealership, review, purchase, purchase_date=None, car_make=None, car_model=None, car_year=None):
+        self.id = id
+        self.name = name
+        self.dealership = dealership
+        self.review = review
+        self.purchase = purchase
+        self.purchase_date = purchase_date
+        self.car_make
+        self.car_model
+        self.car_year
