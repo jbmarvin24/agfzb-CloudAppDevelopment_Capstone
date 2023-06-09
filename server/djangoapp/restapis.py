@@ -48,7 +48,7 @@ def post_request(url,json_payload, **kwargs):
 def get_dealers_from_cf(url, **kwargs):
     results = []
     # Call get_request with a URL parameter
-    json_result = get_request(url)
+    json_result = get_request(url, None)
     if json_result:
         # Get the row list in JSON as dealers
         dealers = json_result["rows"]
@@ -92,7 +92,7 @@ def get_dealer_reviews_from_cf(url, dealerId):
             
             # Get Sentiment
             sentiment = analyze_review_sentiments(review_obj.review)
-            print(sentiment)
+            # print(sentiment)
             review_obj.sentiment = sentiment["sentiment"]["document"]["label"]
 
             results.append(review_obj)
