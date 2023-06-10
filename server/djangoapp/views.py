@@ -11,7 +11,7 @@ from datetime import datetime
 import logging
 import json
 
-from .restapis import get_dealer_reviews_from_cf, get_dealers_from_cf, post_request
+from .restapis import get_dealer_from_cf, get_dealer_reviews_from_cf, get_dealers_from_cf, post_request
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -99,9 +99,11 @@ def get_dealer_details(request, dealer_id):
         url = "https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review"
         # Get dealers from the URL
         reviews = get_dealer_reviews_from_cf(url, dealerId=dealer_id)
-        
+
+        dealer_name = get_dealer(dealer_id)
+
         context["review_list"] = reviews
-        context["dealer_name"] = request.GET.get("dealername")
+        context["dealer_name"] = dealer_name
         context["dealer_id"] = dealer_id
         return render(request, 'djangoapp/dealer_details.html', context)
 
@@ -112,14 +114,15 @@ def add_review(request, dealer_id):
         context = {}
         print(request)
         if request.method == "GET":
-            cars = CarMake.objects.all()
+            cars = CarModel.objects.all()
+            dealer_name = get_dealer(dealer_id)
             context["cars"] = cars
             context["dealer_id"] = dealer_id
+            context["dealer_name"] = dealer_name
             print(cars)
             return render(request, 'djangoapp/add_review.html', context)
-            # return reverse(viewname="djangoapp:add_review", args=(dealer_id,))
-            #return HttpResponse(dealer_id)
-        # elif request.method == "POST":
+        elif request.method == "POST":
+            print(request.POST)
         #     review = {}
         #     review["time"] = datetime.utcnow().isoformat()
         #     review["dealership"] = dealer_id
@@ -130,8 +133,16 @@ def add_review(request, dealer_id):
         #     json_payload = {}
         #     json_payload["review"] = review
 
-        #     return post_request('https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review'
-        #             , json_payload=json_payload, dealerId=dealer_id)
+            # post_request('https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review'
+            #         , json_payload=json_payload, dealerId=dealer_id)
+            # print(reverse("dealer_details"))
+            # return redirect('djangoapp/dealer/1?sample=val')
+            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+
+
+            
+def get_dealer(dealer_id):
+    return get_dealer_from_cf("https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/get-dealership", id=dealer_id)
         
 
 
