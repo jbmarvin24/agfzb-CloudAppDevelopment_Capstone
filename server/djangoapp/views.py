@@ -10,6 +10,7 @@ from django.contrib import messages
 from datetime import datetime
 import logging
 import json
+import dateutil.parser as dateParser
 
 from .restapis import get_dealer_from_cf, get_dealer_reviews_from_cf, get_dealers_from_cf, post_request
 
@@ -119,30 +120,46 @@ def add_review(request, dealer_id):
             context["cars"] = cars
             context["dealer_id"] = dealer_id
             context["dealer_name"] = dealer_name
-            print(cars)
             return render(request, 'djangoapp/add_review.html', context)
         elif request.method == "POST":
-            print(request.POST)
-        #     review = {}
-        #     review["time"] = datetime.utcnow().isoformat()
-        #     review["dealership"] = dealer_id
-        #     review["review"] = "This is a great car dealer"
-        #     review["name"] = "Name"
-        #     review["purchase"] = True
+            # print(request.POST)
+            formDto = request.POST
+            user = request.user
 
-        #     json_payload = {}
-        #     json_payload["review"] = review
+            review = {}
+            review["time"] = datetime.utcnow().isoformat()
+            review["name"] = user.first_name + " " + user.last_name
+            review["dealership"] = dealer_id
+            review["review"] = formDto["content"]
+            review["purchase"] = True if "purchasecheck" in formDto and formDto["purchasecheck"] == "on" else False
 
-            # post_request('https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review'
-            #         , json_payload=json_payload, dealerId=dealer_id)
-            # print(reverse("dealer_details"))
-            # return redirect('djangoapp/dealer/1?sample=val')
+            purchase_date = formDto["purchasedate"]
+            if purchase_date is not None and purchase_date != "":
+                review["purchase_date"]  = dateParser.parse(purchase_date).isoformat()
+
+            # Get the Car
+            car_id_dto = formDto["car"]
+            if car_id_dto != "":
+                car = CarModel.objects.get(id=car_id_dto)
+                review["car_make"] = car.make.name
+                review["car_model"] = car.name
+                review["car_year"]  = car.year.strftime("%Y")
+
+            # print(review)
+
+            json_payload = {}
+            json_payload["review"] = review
+
+            post_request(url="https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/review"
+                     , json_payload=json_payload)
+            
+            # return render(request, 'djangoapp/add_review.html', context)
             return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
 
 
             
-def get_dealer(dealer_id):
-    return get_dealer_from_cf("https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/get-dealership", id=dealer_id)
+def get_dealer(id):
+    return get_dealer_from_cf("https://us-south.functions.appdomain.cloud/api/v1/web/b3a18e7c-ebeb-4141-93d1-c859b10e80aa/dealership-package/get-dealership", id=id)
         
 
 

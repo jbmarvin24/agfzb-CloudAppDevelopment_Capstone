@@ -20,7 +20,11 @@ def get_request(url,api_key, **kwargs):
             # Call get method of requests library with URL and parameters
             response = requests.get(url, headers={'Content-Type': 'application/json'},
                                     params=kwargs)
-    except:
+    except Exception as e:
+        if hasattr(e, 'message'):
+            print(e.message)
+        else:
+            print(e)
         # If any error occurs
         print("Network exception occurred")
     status_code = response.status_code
@@ -31,14 +35,18 @@ def get_request(url,api_key, **kwargs):
 
 def post_request(url,json_payload, **kwargs):
     print(kwargs)
-    print("GET from {} ".format(url))
+    print("POST from {} ".format(url))
     try:
-        # Call get method of requests library with URL and parameters
-        response = requests.post(url, headers={'Content-Type': 'application/json'},
-                                params=kwargs, json=json_payload)
-    except:
-        # If any error occurs
-        print("Network exception occurred")
+        # Call post method of requests library with URL and parameters
+        response = requests.post(url, json=json_payload)
+    except Exception as e:
+    # Just print(e) is cleaner and more likely what you want,
+    # but if you insist on printing message specifically whenever possible...
+        if hasattr(e, 'message'):
+            print(e.message)
+        else:
+            print(e)
+            
     status_code = response.status_code
     print("With status {} ".format(status_code))
     json_data = json.loads(response.text)
@@ -66,10 +74,10 @@ def get_dealers_from_cf(url, **kwargs):
     return results
 
 
-def get_dealer_from_cf(url, **kwargs):
+def get_dealer_from_cf(url, id):
     results = []
     # Call get_request with a URL parameter
-    json_result = get_request(url, None)
+    json_result = get_request(url, None, id=id)
     if json_result:
         # Get the row list in JSON as dealers
         dealers = json_result["rows"]
@@ -106,16 +114,20 @@ def get_dealer_reviews_from_cf(url, dealerId):
             review_doc = review["doc"]
             # Create a CarDealer object with values in `doc` object
 
-            review_obj = DealerReview(id=review_doc["id"], name=review_doc["name"]
+            review_obj = DealerReview(id=0 if "id" not in review_doc else review_doc["id"], name=review_doc["name"]
                                       , dealership=review_doc["dealership"], review=review_doc["review"]
-                                      , purchase=review_doc["purchase"], purchase_date=review_doc["purchase_date"]
-                                      , car_make=review_doc["car_make"], car_model=review_doc["car_model"]
-                                      , car_year=review_doc["car_year"], sentiment=None)
+                                      , purchase=review_doc["purchase"]
+                                      , purchase_date= "" if "purchase_date" not in review_doc else review_doc["purchase_date"]
+                                      , car_make= "" if "car_make" not in review_doc else review_doc["car_make"]
+                                      , car_model= "" if "car_model" not in review_doc else review_doc["car_model"]
+                                      , car_year= "" if "car_year" not in review_doc else review_doc["car_year"]
+                                      , sentiment=None)
             
             # Get Sentiment
-            sentiment = analyze_review_sentiments(review_obj.review)
+            # print(review_obj.review)
+            analyze_response = analyze_review_sentiments(review_obj.review)
             # print(sentiment)
-            review_obj.sentiment = sentiment["sentiment"]["document"]["label"]
+            review_obj.sentiment = "neutral" if "sentiment" not in analyze_response else analyze_response["sentiment"]["document"]["label"]
 
             results.append(review_obj)
 
@@ -134,5 +146,8 @@ def analyze_review_sentiments(text):
     # Call get_request with a URL parameter
     return get_request("https://api.au-syd.natural-language-understanding.watson.cloud.ibm.com/instances/20de000d-bf2e-4100-85ff-f7e119e0f7cf/v1/analyze",
                                "ZX0n5-_7EbSNRBvowfrZMNls0uRBHWxq81yGUBDv30ng"
-                               , text=text, version='2022-04-07'
-                               , features="sentiment",return_analyzed_text=True, language="en")
+                               , version='2022-04-07'
+                               , language="en"
+                               , features="sentiment"
+                               , text=text
+                               , return_analyzed_text=True)
